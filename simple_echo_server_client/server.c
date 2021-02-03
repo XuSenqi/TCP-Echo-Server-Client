@@ -4,6 +4,7 @@ tcp ipv4 server simple example
 
 存在的问题：
 1 每次只能处理一个client连接，其他的client卡在等待server的accept
+2 只适用于ipv4, 不适用于ipv6
 
 */
 #include<stdio.h>
