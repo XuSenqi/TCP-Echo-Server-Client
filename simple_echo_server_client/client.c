@@ -18,8 +18,20 @@ void process(int sockfd)
             ; 
         write(sockfd, buff, sizeof(buff)); 
         bzero(buff, sizeof(buff)); 
+
+        // 正常流程
         read(sockfd, buff, sizeof(buff)); 
         printf("From Server : %s", buff); 
+
+        /*
+        // 模拟client收到数据在缓冲区里，但没有读取就close的情况(或者手动kill也一样)；此时会发送rst给server
+        //read(sockfd, buff, sizeof(buff)); 
+        //printf("From Server : %s", buff); 
+        sleep(1);
+        printf("call close in process: \n"); 
+        close(sockfd); 
+        */
+
         if ((strncmp(buff, "exit", 4)) == 0) { 
             printf("Client Exit...\n"); 
             break; 
@@ -61,6 +73,7 @@ int main(int argc, char** argv) {
     process(sockfd); 
   
     // close the socket 
+    printf("call close\n");
     close(sockfd); 
 
     return 0;

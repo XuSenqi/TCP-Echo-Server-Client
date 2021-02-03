@@ -28,8 +28,9 @@ void str_echo(int sockfd, char *buf, size_t MAXLINE)
 
 again:
     //read from the client 
-    //if client calls close or is killed, read returns EOF(-1)
-    //EINTR  The call was interrupted by a signal before any data was read, repeat needed
+    //if client calls close or is killed normally(即server端读取了全部数据了), read returns 0
+    //if client 接收缓冲区里数据还没有完全被读取，就 calls close or is killed normally, client发送rst给server， server read returns -1, errno 被设置为104(ECONNRESET，详细定义见errno.h)
+    //if server read was interrupted by a signal before any data was read, read returns -1, errno被置为EINTR, 需要重复读取
 	while ( (n = read(sockfd, buf, MAXLINE)) > 0) {
         //write back to the client
         ret = write(sockfd, buf, strlen(buf) * sizeof(char));
@@ -43,7 +44,7 @@ again:
 		goto again;
     }
 	else if (n < 0) {
-		perror("str_echo: read error");
+		printf("str_echo: read %d, errno %d\n", n, errno);
     }
 }
 
