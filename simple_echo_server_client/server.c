@@ -13,11 +13,39 @@ tcp ipv4 server simple example
 #include <netinet/in.h>
 #include <strings.h>
 #include <string.h>
+#include<errno.h>
+//#include <unistd.h>
 
 #define MAX_BUF_SIZE 1000
 #define LISTENQ 50
 #define IPADDR "127.0.0.1"
 #define PORT 8080
+
+void str_echo(int sockfd, char *buf, size_t MAXLINE)
+{
+	int	n;
+    int ret = 0;
+
+again:
+    //read from the client 
+    //if client calls close or is killed, read returns EOF(-1)
+    //EINTR  The call was interrupted by a signal before any data was read, repeat needed
+	while ( (n = read(sockfd, buf, MAXLINE)) > 0) {
+        //write back to the client
+        ret = write(sockfd, buf, strlen(buf) * sizeof(char));
+        if(ret < 0) {
+            perror("write()");
+            break;
+        }
+    }
+
+	if (n < 0 && errno == EINTR) {
+		goto again;
+    }
+	else if (n < 0) {
+		perror("str_echo: read error");
+    }
+}
 
 int main(int argc, char** argv) {
     int listenfd, connfd;
@@ -75,21 +103,7 @@ int main(int argc, char** argv) {
         printf("Connect fd = %d\n", connfd);
         memset(buf, 0, sizeof(buf));
 
-        //read from the client until client close/or send EOF
-        while((ret = read(connfd, buf, (size_t)MAX_BUF_SIZE)) && ret != EOF) {
-            if(ret < 0) {
-                perror("read()");
-                exit(-1);
-            }
-            printf("Get data %s\n", buf);
-
-            //write back to the client
-            ret = write(connfd, buf, strlen(buf) * sizeof(char));
-            if(ret < 0) {
-                perror("write()");
-                break;
-            }
-        }
+        str_echo(connfd, buf, (size_t)MAX_BUF_SIZE);
         close(connfd);
     }
 
