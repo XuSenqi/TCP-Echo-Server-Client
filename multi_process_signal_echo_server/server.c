@@ -1,7 +1,8 @@
 /*
-tcp ipv4 server 多进程版本
+tcp ipv4 server 多进程 + signal版本
 
-局限： 1 ) 退出的子进程都变成僵死进程，需要加信号处理来解决。
+编译： gcc server.c usignal.c -o server
+
 */
 #include<stdio.h>
 #include <stdlib.h>
@@ -10,7 +11,8 @@ tcp ipv4 server 多进程版本
 #include <strings.h>
 #include <string.h>
 #include<errno.h>
-//#include <unistd.h>
+#include <signal.h>
+#include "./usignal.h"
 
 #define MAX_BUF_SIZE 1000
 #define LISTENQ 50
@@ -92,6 +94,8 @@ int main(int argc, char** argv) {
     }
     printf("Server listening in %s:%d\n", IPADDR, PORT);
 
+    Signal(SIGCHLD, sig_chld);
+
     while(1) {
 
 		struct sockaddr_in client_addr;
@@ -101,8 +105,13 @@ int main(int argc, char** argv) {
 		// 取出客户端已完成的连接
 		connfd = accept(listenfd, (struct sockaddr*)&client_addr, &cliaddr_len);
         if(connfd < 0) {
-            perror("accept()");
-            exit(-1);
+            if( errno == EINTR ) { 
+                continue;              // 避免子进程返回时，父进程捕获SIGCHILD信号，内核会使accept返回一个EINTR错误；父进程可能终止，或重启被中断的系统调用（与系统有关）
+            }
+            else {
+                perror("accept()");
+                exit(-1);
+            }
         }
         printf("Connect fd = %d\n", connfd);
 
