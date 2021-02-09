@@ -27,8 +27,8 @@ void str_echo(int sockfd, char *buf, size_t MAXLINE)
     int ret = 0;
 
 again:
-    //read from the client 
-    //if client calls close or is killed normally(即server端读取了全部数据了), read returns 0
+    //正常情况：read from the client , 返回一个大于0的值（即读入数据的字节数）
+    //if client calls close or is killed normally(即server端读取了全部数据了), read returns 0(EOF)
     //if client 接收缓冲区里数据还没有完全被读取，就 calls close or is killed normally, client发送rst给server， server read returns -1, errno 被设置为104(ECONNRESET，详细定义见errno.h)
     //if server read was interrupted by a signal before any data was read, read returns -1, errno被置为EINTR, 需要重复读取
 	while ( (n = read(sockfd, buf, MAXLINE)) > 0) {

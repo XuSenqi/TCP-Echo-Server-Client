@@ -21,7 +21,7 @@ void process(int sockfd)
 
         // 正常流程
         read(sockfd, buff, sizeof(buff)); 
-        printf("From Server : %s", buff); 
+        //printf("From Server : %s", buff); 
 
         /*
         // 模拟client收到数据在缓冲区里，但没有读取就close的情况(或者手动kill也一样)；此时会发送rst给server
@@ -31,6 +31,9 @@ void process(int sockfd)
         printf("call close in process: \n"); 
         close(sockfd); 
         */
+
+        // 结果打印到标准输出
+        fputs(buff, stdout);
 
         if ((strncmp(buff, "exit", 4)) == 0) { 
             printf("Client Exit...\n"); 
