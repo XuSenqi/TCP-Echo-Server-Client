@@ -127,7 +127,6 @@ int main(int argc, char** argv) {
 			close(listenfd);   // 关闭监听套接字，这个套接字是从父进程继承过来
             str_echo(connfd);  // process the request
             exit(0);
-            // tofix: 这里退出的子进程会变成僵死进程。
         }
         close(connfd);         // parent closes connected socket
     }
