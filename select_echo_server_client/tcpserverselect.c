@@ -4,8 +4,14 @@ tcp ipv4 server select版本
 避免了为每个可出创建一个进程的开销
 不过依然存在问题.....
 
-《Unix网络编程》上说如果一个客户端连接后，发送一个字节的数据（不是换行符）后进入sleep，server会卡在read上，不能为其他client服务。
+1 《Unix网络编程》卷1 第3版 6.8 拒绝服务型攻击 一节上说如果一个客户端连接后，发送一个字节的数据（不是换行符）后进入sleep，server会卡在read上，不能为其他client服务。
 但是我没复现出来卡住的情况。
+
+2 《Unix网络编程》卷1 第3版 16.6 非阻塞accept 一节上说如果客户端在建立连接后，立刻发送一个RST到服务器；服务器会可能一直阻塞在accept调用上，无法为其他连接服务
+
+解决办法：
+非阻塞I/O: read/accept
+
 */
 #include<stdio.h>
 #include <stdlib.h>
