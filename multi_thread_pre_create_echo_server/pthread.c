@@ -109,21 +109,21 @@ void* thread_main(void *arg)
 	int		connfd;
 
 	printf("thread %d starting\n", (int) arg);
-	//for ( ; ; ) {
-    	//Pthread_mutex_lock(&clifd_mutex);
-        //while (iget == iput) {
-        //    Pthread_cond_wait(&clifd_cond, &clifd_mutex); //条件变量的用法见 Unix 网络编程卷1 26.8
-        //}
-        //connfd = clifd[iget];	/* connected socket to service */
-        //if (++iget == MAXNCLI) {
-        //    iget = 0;
-        //}
-        //Pthread_mutex_unlock(&clifd_mutex);
-        //tptr[(int) arg].thread_count++;
+	for ( ; ; ) {
+        //Pthread_mutex_lock(&clifd_mutex);
+        while (iget == iput) {
+            Pthread_cond_wait(&clifd_cond, &clifd_mutex); //条件变量的用法见 Unix 网络编程卷1 26.8
+        }
+        connfd = clifd[iget];	/* connected socket to service */
+        if (++iget == MAXNCLI) {
+            iget = 0;
+        }
+        Pthread_mutex_unlock(&clifd_mutex);
+        tptr[(int) arg].thread_count++;
 
-        //str_echo(connfd);		/* process request */
-        //Close(connfd);
-	//}
+        str_echo(connfd);		/* process request */
+        Close(connfd);
+	}
 }
 
 void thread_make(int i)

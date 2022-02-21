@@ -22,7 +22,7 @@ gcc server.c -lpthread -g
 #define IPADDR "0.0.0.0"
 #define PORT 8080
 
-static int nthreads = 10;
+int nthreads = 10;
 
 extern void Pthread_mutex_lock(pthread_mutex_t *mptr);
 extern void Pthread_mutex_unlock(pthread_mutex_t *mptr);
@@ -40,13 +40,35 @@ void* Calloc(size_t n, size_t size)
 	return(ptr);
 }
 
+int Accept(int fd, struct sockaddr *sa, socklen_t *salenptr)
+{
+	int		n;
+
+again:
+	if ( (n = accept(fd, sa, salenptr)) < 0) {
+#ifdef	EPROTO
+		if (errno == EPROTO || errno == ECONNABORTED)
+#else
+		if (errno == ECONNABORTED)
+#endif
+			goto again;
+		else
+			perror("accept error");
+            exit(-2);
+	}
+	return(n);
+}
+
 int main(int argc, char** argv) {
-    int i, listenfd, *connfdp;
+    int i, listenfd, connfd;
     pid_t childpid;
-    struct sockaddr_in servaddr; //sockaddr_in is used to describe internet(IPV4) socket address
+    struct sockaddr_in client_addr,servaddr; //sockaddr_in is used to describe internet(IPV4) socket address
     int ret = 0;
     pthread_t tid;
     void thread_make(int);
+
+    tptr = Calloc(nthreads, sizeof(Thread));
+    iget = iput = 0;
 
     listenfd = socket(AF_INET, SOCK_STREAM, 0);
     if(listenfd < 0) {
@@ -68,13 +90,18 @@ int main(int argc, char** argv) {
 
     //You can also choose the code below to let socket
     //listen to all interface
-    //servaddr.sin_addr.s_addr =  htonl(INADDR_ANY);
+    servaddr.sin_addr.s_addr =  htonl(INADDR_ANY);
 
     //Convert unsigned short to on-wire data
     servaddr.sin_port = htons(PORT);
 
+    ///* 4create all the threads */
+    for (i = 0; i < nthreads; i++) {
+        thread_make(i);		/* only main thread returns */
+    }
+
     //Let socket bind to the server address and port
-    ret = bind(listenfd, (const struct sockaddr *)&servaddr,sizeof(struct sockaddr_in));
+    ret = bind(listenfd, (struct sockaddr *)&servaddr,sizeof(struct sockaddr_in));
     if(ret < 0) {
         perror("bind()");
         exit(-1);
@@ -88,31 +115,17 @@ int main(int argc, char** argv) {
     }
     printf("Server listening in %s:%d\n", IPADDR, PORT);
 
-    tptr = Calloc(nthreads, sizeof(Thread));
-    iget = iput = 0;
-
-	/* 4create all the threads */
-    for (i = 0; i < nthreads; i++) {
-        thread_make(i);		/* only main thread returns */
-    }
-
     while(1) {
 
-		struct sockaddr_in client_addr;
 		socklen_t cliaddr_len = sizeof(client_addr);
 
         //accept will block until a client connect to the server
 		// 取出客户端已完成的连接
-		*connfdp = accept(listenfd, (struct sockaddr*)&client_addr, &cliaddr_len);
-        if(*connfdp < 0) {
-            perror("accept()");
-            exit(-1);
-        }
-        printf("Connect fd = %d\n", *connfdp);
+        connfd = Accept(listenfd, (struct sockaddr*)&servaddr, &cliaddr_len);
+        printf("Connect fd = %d\n", connfd);
 
         Pthread_mutex_lock(&clifd_mutex);
-        printf("lock = %d\n", 111);
-        clifd[iput] = *connfdp;
+        clifd[iput] = connfd;
 		if (++iput == MAXNCLI) {
 			iput = 0;
         }

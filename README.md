@@ -9,11 +9,10 @@ signal函数中调用waitpid,处理子进程退出后留下的僵尸进程
 # 4 multi_thread_echo_server
 
 # 5 multi_thread_pre_created_echo_server
-这个版本会core,待查
 预先创建线程，主线程统一accept
 
 # 5 multi_thread_pre_created_echo_server_good
-可以运行
+封装threadpool, 可以运行
 # 6 select_echo_server_client
 
 # 7 select_echo_server_event_driven
