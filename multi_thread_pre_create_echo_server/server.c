@@ -122,6 +122,13 @@ int main(int argc, char** argv) {
         //accept will block until a client connect to the server
 		// 取出客户端已完成的连接
         connfd = Accept(listenfd, (struct sockaddr*)&servaddr, &cliaddr_len);
+        /*
+        注： 不能使用 
+            int *connfdp; 
+            *connfdp = Accept(listenfd, (struct sockaddr*)&servaddr, &cliaddr_len);
+            这里指针 connfdp 还没有指向某个int数据，就赋值了。
+            犯了 Uninitialised value was created by a stack allocation
+        */
         printf("Connect fd = %d\n", connfd);
 
         Pthread_mutex_lock(&clifd_mutex);
