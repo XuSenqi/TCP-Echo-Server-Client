@@ -1,8 +1,6 @@
 /*
 tcp ipv4 server 多线程版本
 
-目前有问题，accept会core
-
 编译：
 gcc server.c -lpthread -g
 -g: 加入debug信息
